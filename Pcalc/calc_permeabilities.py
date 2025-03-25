@@ -1,180 +1,182 @@
-#! /usr/bin/python3
-#####################
-# Imports
-###
-import sys
-import math
+import os
+import glob
+import re
 import numpy as np
-from scipy.constants import *
 
-#####################
-# Constants
-###
-kb=0.0019872041 #kcal mol-1 K-1
+def get_tprs(base_dir, zzmin, zzmax, zzstep, output_file):
+    """Generates a list of .tpr files and saves to output_file."""
+    with open(output_file, "w") as f:
+        for u in range(int(zzmin * 10), int(zzmax * 10) + 1, int(zzstep * 10)):
+            umb = f"{u / 10:.1f}"
+            tpr_path = os.path.join(base_dir, f"umbrella_d_{umb}/01_prod_r1/001.tpr")
+            gz_path = tpr_path + ".gz"
+            
+            if os.path.exists(gz_path):
+                os.system(f"gunzip {gz_path}")
+            
+            if os.path.exists(tpr_path):
+                f.write(f"{tpr_path}\n")
 
-#####################
-# Functions
-###
+def get_pulls_all(base_dir, zzmin, zzmax, zzstep, tinit, tend, output_dir, filesf_path):
+    """Extracts data from .xvg files and compiles file paths."""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    with open(filesf_path, "w") as filesf:
+        for u in range(int(zzmin * 10), int(zzmax * 10) + 1, int(zzstep * 10)):
+            umb = f"{u / 10:.1f}"
+            for var in ["f", "x"]:
+                umb_xvg_path = os.path.join(output_dir, f"umb_{umb}{var}.xvg")
+                with open(umb_xvg_path, "w") as xvg_out:
+                    for r in [1, 2, 3]:
+                        xvg_files = glob.glob(os.path.join(base_dir, f"umbrella_d_{umb}/01_prod_r{r}", f"???{var}.xvg"))
+                        for xvg in xvg_files:
+                            with open(xvg, "r") as infile:
+                                n = 0
+                                for line in infile:
+                                    parts = line.split()
+                                    if len(parts) >= 2:
+                                        try:
+                                            time = float(parts[0])
+                                            value = float(parts[1])
+                                            if tinit < time <= tend:
+                                                n += 1
+                                                xvg_out.write(f"{n * 10} {value}\n")
+                                        except ValueError:
+                                            continue
+                if var == "f":
+                    filesf.write(f"{umb_xvg_path}\n")
 
-# Mean and stddev
-def mean_stddev(values):
-    s   = 0
-    ssq = 0
-    n   = float(len(values))
-    for i in values:
-        s   =   s + i
-        ssq = ssq + i*i
-    mean   = s/n
-    stddev = math.sqrt(ssq/n - mean*mean)
-    return mean, stddev
+def get_pulls_rep(base_dir, zzmin, zzmax, zzstep, tinit, tend, output_dir, filesf_path, rep):
+    """Extracts data from .xvg files and compiles file paths for specified reps."""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    with open(filesf_path, "w") as filesf:
+        for u in range(int(zzmin * 10), int(zzmax * 10) + 1, int(zzstep * 10)):
+            umb = f"{u / 10:.1f}"
+            for var in ["f", "x"]:
+                umb_xvg_path = os.path.join(output_dir, f"umb_{umb}{var}.xvg")
+                with open(umb_xvg_path, "w") as xvg_out:
+                    xvg_files = glob.glob(os.path.join(base_dir, f"umbrella_d_{umb}/01_prod_r{rep}", f"???{var}.xvg"))
+                        
+                    for xvg in xvg_files:
+                        with open(xvg, "r") as infile:
+                            n = 0
+                            for line in infile:
+                                parts = line.split()
+                                if len(parts) >= 2:
+                                    try:
+                                        time = float(parts[0])
+                                        value = float(parts[1])
+                                        if tinit < time <= tend:
+                                            n += 1
+                                            xvg_out.write(f"{n * 10} {value}\n")
+                                    except ValueError:
+                                        continue
+                    if var == "f":
+                        filesf.write(f"{umb_xvg_path}\n")
 
-# Read a clean *x.xvg file with two columns
-# Output: two vectors corresponding to the two columns
-def read_xxvg(f):
-    x = []
-    y = []
-    with open(f) as fi:
-        for line in fi:
-            if line[0] != "@" and line [0] != "#":
-                vals = line.split()
-                x.append(float(vals[0]))
-                y.append(float(vals[1]))
-    return x,y
+def g_wham(gromacs_path, output_dir, largebins, zprof0, bs):
+    """Runs the WHAM analysis."""
+    os.system(f"rm -f {output_dir}/bsResult.xvg")
+    wham_command = (
+        f"{gromacs_path} wham -it {output_dir}/tpr-files.dat -if {output_dir}/filesf.dat "
+        f"-o {output_dir}/profilef.xvg -hist {output_dir}/histf.xvg "
+        f"-unit kCal -tol 1e-6 -bins {largebins} -zprof0 {zprof0} "
+        f"-min -0.01 -max 3.61 -nBootstrap {bs} -xvg none > {output_dir}/aux-log 2>&1"
+    )
+    os.system(wham_command)
+    os.system(f"awk 'NR%10==1{{print $0}}' {output_dir}/bsResult.xvg > {output_dir}/aux-bsResult")
 
-# Read a PMF file with two columns
-# Output: two vectors corresponding to the two columns (only >= 0 values are added)
-def read_pmf(f):
-    x = []
-    y = []
-    with open(f) as fi:
-        for line in fi:
-            if line[0] != "@" and line [0] != "#":
-                vals = line.split()
-                if float(vals[0]) >= 0:
-                    x.append(float(vals[0]))
-                    y.append(float(vals[1]))
-    return x,y
+def isdm_all(script_path, output_dir, method):
+    """Runs the ISDM permeability calculation."""
+    os.system(f"{script_path} > {output_dir}/Permeability_{method}")
+    #os.system(f"rm -f {output_dir}/aux-bsResult *#")
 
-# The input/output is equal to timecorr (A. M. Baptista)
-# corr = Czz from equation 1 in 10.1021/jacs.6b11215
-def timecorr(x, y):
-    nint = len(x)
-    n    = float(len(x))
-    nchk = float(len(y))
-    if n != nchk:
-        sys.exit("(Error in timecorr function) The two arrays must have equal size.")
-    #AVXs and SDs
-    avx1,sd1 = mean_stddev(x)
-    avx2,sd2 = mean_stddev(y)
-    #deltaA eq.2.105 and 2.44 Allen and Tildesley
-    xmod=[]
-    ymod=[]
-    for i in range(nint):
-        xmod.append(x[i]-avx1)
-        ymod.append(y[i]-avx2)
-    #Time column
-    time=[i for i in range(nint)]
-    # non-normalized correlation function
-    corr = []
-    for i in range(nint):
-        s = 0
-        aaa = 0
-        for j in range(0,nint-i):
-            s = s + xmod[j+i]*ymod[j]
-        corr.append(s/(n-i))
-    # normalization and integration
-    normf    = sd1*sd2
-    normcorr = []
-    tcorr    = []
-    tcorrpar = 0
-    for i in range(nint):
-        normcorr.append(corr[i]/normf)
-        tcorrpar = tcorrpar + corr[i]/normf
-        tcorr.append(tcorrpar)
-    return time,normcorr,corr,tcorr
+def isdm_rep(script_path, output_dir, method, rep):
+    """Runs the ISDM permeability calculation."""
+    os.system(f"{script_path} > {output_dir}/Perm_single_{rep}_{method}")
+    #os.system(f"rm -f {output_dir}/aux-bsResult *#")
 
-#####################
-# Functions related to equations 1-3 from 10.1021/jacs.6b11215
-###
-def integral_Czz(corr, var, dt):
-    s   = 0
-    chk = 0
-    for i in range(len(corr)):
-        if corr[i]>0.01*var and chk == 0:
-            s = s + corr[i]*dt
-        elif (corr[i]<0.01*var):
-            chk=1
-    return s
+def extract_value(filename):
+    """Extracts the numerical permeability value from the file."""
+    with open(filename, 'r') as file:
+        for line in file:
+            match = re.search(r"#Peff = ([\d\.]+)", line)
+            if match:
+                return float(match.group(1))
+    return None 
 
-# The input is in ps and nm
-# Output in cm2 s-1
-def Dz(times, positions, b, jump):
-    dt = times[1] - times[0]
-    avx,stddev = mean_stddev(positions)
-    var = stddev * stddev
-    data = []
-    autocorrs = []
-    for i in range(len(times)):
-        if times[i] > b:
-            data.append(positions[i])
-            if times[i]%jump == 0:
-                avx,stddev = mean_stddev (data)
-                var = stddev * stddev
-                time, normcorr, corr, tcorr = timecorr(data, data)
-                autocorrs.append(integral_Czz(corr, var, dt))
-                data=[]
-    out_data = mean_stddev(autocorrs)
-    return 0.01 * var * var / out_data[0]
+def jackknife_error(replicates):
+    """Computes the Jackknife error and standard error (SE)."""
+    n = len(replicates)
+    mean_total = np.mean(replicates)
+    pseudo_values = [n * mean_total - (n - 1) * x for x in replicates]
+    
+    jackknife_var = np.var(pseudo_values, ddof=1) * (n - 1) / n
+    jackknife_se = np.sqrt(jackknife_var)
+    
+    # Traditional standard error (SE)
+    standard_se = np.std(replicates, ddof=1) / np.sqrt(n)
+    
+    return jackknife_var, jackknife_se, standard_se
 
-# The input is
-# dG in kcal mol-1
-# beta mol kcal-1
-# The output will have the inverse units of Dz: usually cm2 s-1 -> s cm-2
-def Rz(pmf, dzs, beta):
-    rzs = []
-    for i in range(len(pmf)):
-        rzs.append(math.exp(beta * pmf[i]) / dzs[i])
-    return rzs
+def extract_permeability(method, output_file):
+    """Extracts permeability values for a given method and writes to file."""
+    total_value = extract_value(f"Permeability_{method}")
+    
+    replicates = [extract_value(f"Perm_single_{i}_{method}") for i in range(1, 4)]
+    
+    jackknife_var, jackknife_se, standard_se = jackknife_error(replicates)
+    
+    output_file.write(f"{method} {total_value:.6f} {jackknife_se:.6f} {standard_se:.6f} "
+                      f"{replicates[0]:.6f} {replicates[1]:.6f} {replicates[2]:.6f}\n")
 
-# The input is
-# dG in kcal mol-1
-# beta mol kcal-1
-# The output will have the inverse units of Dz: usually cm2 s-1 -> s cm-2
-def Peff(UScenters, rzs):
-    if len(UScenters) != len(rzs):
-        sys.exit("(Error in Peff function) The two arrays must have equal size.")
-    s = 0
-    for i in range(1,len(UScenters)):
-        s = s + ( ( UScenters[i] - UScenters[i-1] ) * 10**-7 ) * ( ( rzs[i] + rzs[i-1] ) / 2 )
-    return 1/s
+
+if __name__ == "__main__":
+    import argparse
+    
+    # Get compound name from user input
+    parser = argparse.ArgumentParser(description="Run permeability analysis for a given compound.")
+    parser.add_argument("compound_name", help="Name of the compound")
+    args = parser.parse_args()
+
+    # Define paths dynamically based on compound name
+    compound_name = args.compound_name
+    base_dir = f"/home/afortuna/permeability/01_sims/ligands/literature_compounds/{compound_name}"
+    output_dir = f"/home/afortuna/permeability/02_analysis/{compound_name}/calc_perm"
+
+    zzmin, zzmax, zzstep = 0.0, 3.6, 0.2
+    tinit, tend = 50000, 150000
+    tpr_output_file = os.path.join(output_dir, "tpr-files.dat")
+    filesf_output_file = os.path.join(output_dir, "filesf.dat")
+    gromacs_path = "/gromacs/gromacs-2021.2/bin/gmx"
+    script_path = os.path.join(output_dir, "isdm.py")
+    largebins = 191  # Example value
+    zprof0 = 3.6
+    bs = 100
+    
+    for method in ["no_EP", "EP1"]: 
+        method_dir = os.path.join(base_dir, method, "05_umbrellas")
+        get_tprs(method_dir, zzmin, zzmax, zzstep, tpr_output_file)
+        get_pulls_all(method_dir, zzmin, zzmax, zzstep, tinit, tend, output_dir, filesf_output_file)
+        g_wham(gromacs_path, output_dir, largebins, zprof0, bs)
+        isdm_all(script_path, output_dir, method)
+        
+        with open("permeability_results.txt", "w") as output_file:
+            output_file.write("Method Total_Value Jackknife_Error SE Rep1 Rep2 Rep3\n")
+            extract_permeability("no_EP", output_file)
+            extract_permeability("EP1", output_file)
+
+        for rep in range(1, 4): 
+            get_pulls_rep(method_dir, zzmin, zzmax, zzstep, tinit, tend, output_dir, filesf_output_file, rep)
+            g_wham(gromacs_path, output_dir, largebins, zprof0, bs)
+            isdm_rep(script_path, output_dir, method, rep)
+
+
+
+
+
+
+
         
 
-#####################
-# Main
-###
-#if __name__ == "__main__":
-    ###
-    # Inputs
-    #
-tol        = 0.01 # ps
-T          = 310 # K
-xxvgs      = "./umb_{}x.xvg"
-maxdist    = 18 # Angstrom
-pmf        = "./aux-bsResult"
-equilib    = 0 # ps
-block_size = 10000 # 10000 # ps
-
-beta = kb * T
-UScenters, pmf = read_pmf(pmf)
-
-dzs = []
-for i in range(maxdist+1):
-    val = '{:3.1f}'.format(float(i)/5)
-    times, positions = read_xxvg(xxvgs.format(val)) 
-    dzs.append(Dz(times, positions, equilib, block_size))
-    
-rzs = Rz(pmf, dzs, beta)
-peff = Peff(UScenters, rzs)
-print ('#Peff = {} cm s-1'.format(2*peff))
-for i in range(len(pmf)):
-    print(UScenters[i], pmf[i], dzs[i], rzs[i])
