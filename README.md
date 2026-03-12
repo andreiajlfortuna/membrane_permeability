@@ -4,10 +4,10 @@
 
 The "calc_permeabilities.py" script (inside folder Pcalc) analyzes the molecular permeability using the ISDM method. 
 ## Features
-📂 Extracts `.tpr` and `.xvg` files from umbrella sampling simulations.
-⚙️ Runs WHAM analysis using GROMACS.
-📊 Computes permeability using the ISDM method.
-📈 Calculates jackknife error and standard error for reliability assessment.
+- 📂 Extracts `.tpr` and `.xvg` files from umbrella sampling simulations.
+- ⚙️ Runs WHAM analysis using GROMACS.
+- 📊 Computes permeability using the ISDM method.
+- 📈 Calculates jackknife error and standard error for reliability assessment.
 
 ### Requirements
 - Python 3
@@ -72,8 +72,8 @@ Calculates and stores permeability values along with error estimates.
 
 ### Output
 The script generates:
-📝 `permeability_results.txt` with computed permeability values and errors.
-📂 Intermediate `.xvg` and `.dat` files for WHAM and ISDM processing.
+- 📝 `permeability_results.txt` with computed permeability values and errors.
+- 📂 Intermediate `.xvg` and `.dat` files for WHAM and ISDM processing.
 
  
 
