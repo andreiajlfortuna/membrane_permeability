@@ -1,0 +1,33 @@
+remark goes here
+MASS
+ep 0.000         0.000               ATTN, need revision
+
+BOND
+br-ep    0.00   0.000       ATTN, need revision
+
+ANGLE
+ca-br-ep    0.000       0.000   ATTN, need revision
+
+DIHE
+ca-ce-n2-c3   1    4.150       180.000           2.000      same as X -c2-n2-X 
+ca-ce-ca-ca   1    0.700       180.000           2.000      same as X -c2-ca-X 
+ca-ce-ca-nb   1    0.700       180.000           2.000      same as X -c2-ca-X 
+n2-ce-ca-ca   1    0.700       180.000           2.000      same as X -c2-ca-X 
+n2-ce-ca-nb   1    0.700       180.000           2.000      same as X -c2-ca-X 
+ca-ca-br-ep   1    0.000         0.000           0.000      ATTN, need revision
+
+IMPROPER
+ca-ca-ca-ce         1.1          180.0         2.0          Using default value
+ca-ca-ce-n2         1.1          180.0         2.0          Using default value
+c -ca-n -hn         1.1          180.0         2.0          General improper torsional angle (2 general atom types)
+c3-n -c -o         10.5          180.0         2.0          General improper torsional angle (2 general atom types)
+ca-ca-ca-ha         1.1          180.0         2.0          General improper torsional angle (2 general atom types)
+ca-ca-ca-n          1.1          180.0         2.0          Using default value
+ca-ce-ca-nb         1.1          180.0         2.0          Using default value
+ca-h4-ca-nb         1.1          180.0         2.0          Using default value
+
+NONBON
+  ep          0.0000  0.0000             ATTN, need revision
+
+
+

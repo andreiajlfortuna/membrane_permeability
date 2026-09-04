@@ -1,0 +1,50 @@
+; 5fluoroiodobenzene (5FIBZ) with EP and POPC bilayer hydrated gmx topology created by rafaelsn on Oct 13 2016
+
+; Include forcefield parameters
+#include "amber99sb-ildn.ff/forcefield.itp"
+
+; Include gaff atom types
+#include "YYYY_gaff_atom_types.itp"
+
+[ atomtypes ]
+;name   bond_type     mass     charge   ptype   sigma         epsilon       Amb
+ cD       cD          0.00000  0.00000   A     3.39967e-01   4.57730e-01 ; 1.91  0.1094
+ hL       hL          0.00000  0.00000   A     2.60142e-01   4.18400e-02 ; 1.46  0.0100
+ cC       cC          0.00000  0.00000   A     3.39967e-01   2.92880e-01 ; 1.91  0.0700
+ oC       oC          0.00000  0.00000   A     2.93997e-01   5.85760e-01 ; 1.65  0.1400
+ oS       oS          0.00000  0.00000   A     2.93997e-01   5.02080e-01 ; 1.65  0.1200
+ cA       cA          0.00000  0.00000   A     3.39967e-01   4.57730e-01 ; 1.91  0.1094
+ hE       hE          0.00000  0.00000   A     2.47135e-01   6.56888e-02 ; 1.39  0.0157
+ oT       oT          0.00000  0.00000   A     2.93997e-01   5.02080e-01 ; 1.65  0.1200
+ pA       pA          0.00000  0.00000   A     3.74177e-01   8.36800e-01 ; 2.10  0.2000
+ hX       hX          0.00000  0.00000   A     1.95998e-01   6.56888e-02 ; 1.10  0.0157
+ nA       nA          0.00000  0.00000   A     3.25000e-01   7.11280e-01 ; 1.82  0.1700
+ oP       oP          0.00000  0.00000   A     2.93997e-01   5.85760e-01 ; 1.65  0.1400
+ cB       cB          0.00000  0.00000   A     3.39967e-01   3.59824e-01 ; 1.91  0.0860
+ hB       hB          0.00000  0.00000   A     2.22725e-01   2.92880e-02 ; 1.25  0.0070
+ 
+; Include POPC parameters
+#include "POPC.itp"
+
+; Include 5FIBZ-EP parameters
+#include "YYYY.itp"
+
+; Include water topology
+#include "amber99sb-ildn.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+[ system ]
+  POPC bilayer and 5FIBZ with EP hydrated
+
+[ molecules ]
+; Compound        nmols
+ POPC              128     
+ SOL               5652
+ MOL                 1
+

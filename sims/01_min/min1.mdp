@@ -1,0 +1,38 @@
+;
+title               =  min1
+cpp                 =  /lib/cpp
+define              = 
+
+integrator          =  steep
+emtol               =  0.0
+emstep		    =  0.001
+nstcgsteep          = 5000
+nsteps              = 10000
+nstxout             =  0
+nstvout             =  0
+nstfout             =  0
+nstlog              =  0
+
+pbc                 = xyz
+ns_type             = grid
+
+;PME
+coulombtype         = PME
+nstlist             = 10
+rlist               = 1.0
+fourierspacing      = 0.12
+rcoulomb            = 1.0
+pme_order           = 4
+rvdw                = 1.0
+
+vdwtype             = cut-off
+
+energygrps          =  POPC MOL SOL
+
+gen_vel             =  no
+
+;constraint_algorithm=lincs
+;lincs_order         =  8
+;lincs-warnangle     =  90
+;constraints         =  all-bonds
+constraints         =  none

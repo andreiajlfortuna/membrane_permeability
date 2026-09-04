@@ -1,0 +1,8 @@
+
+
+pymol traj_3.4.gro
+pair fit with FIB
+save pdb 
+
+grom=/gromacs/gromacs-2020.6-GPU/bin/gmx
+$grom editconf -f file.pdb -o file.gro

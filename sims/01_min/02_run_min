@@ -1,0 +1,63 @@
+#!/bin/sh
+
+grom=/gromacs/gromacs-2020.6-GPU/bin/gmx
+export AMBERHOME=/home/pjcosta/bin/amber/amber16
+
+
+#
+mol2=$(ls *.mol2)
+name=$(basename ${mol2} -opt-RESP_EP.mol2 )
+lig=$(echo "${name}_EP")
+
+ndx=index.ndx
+top=${lig}_POPC.top 
+prev=${lig}_POPC.gro 
+curr=min1
+#
+
+######################################
+# Generate tpr file for minimization #
+######################################
+
+${grom} grompp -f ${curr}.mdp -po ${curr}_out.mdp -c ${prev} -p ${top} -o ${curr}.tpr -v -n ${ndx} -maxwarn 1000
+
+####################
+# Run minimization #
+####################
+
+${grom} mdrun -s ${curr}.tpr -x ${curr}.xtc -c ${curr}.gro -e ${curr}.edr -g ${curr}.log -v -nice 0
+
+####################
+# Extract pdb file #
+####################
+
+${grom} trjconv -f ${curr}.gro -s ${curr}.tpr -n ${ndx} -o ${curr}.pdb -pbc mol<<EOF
+System
+EOF
+
+#
+prev=./min1.gro
+curr=min2
+#
+
+######################################
+# Generate tpr file for minimization #
+######################################
+
+${grom} grompp -f ${curr}.mdp -po ${curr}_out.mdp -c ${prev} -p ${top} -o ${curr}.tpr -v -n ${ndx} -maxwarn 1000
+
+####################
+# Run minimization #
+####################
+
+${grom} mdrun -s ${curr}.tpr -x ${curr}.xtc -c ${curr}.gro -e ${curr}.edr -g ${curr}.log -v -nice 0
+
+
+####################
+# Extract pdb file #
+####################
+
+${grom} trjconv -f ${curr}.gro -s ${curr}.tpr -n ${ndx} -o ${curr}.pdb -pbc mol<<EOF
+System
+EOF
+
