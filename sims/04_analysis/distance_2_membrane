@@ -1,0 +1,51 @@
+#!/bin/sh
+ 
+####################################################################
+# This shell script calculates the distance to a membrane          # 
+# from GROMACS *.xvg files                                         #
+####################################################################
+ 
+#############################
+# Paulo Jorge Costa         #
+# Molecular Modeling Group  #
+# Universidade de Aveiro    #
+# pjcosta@fc.ul.pt          #
+# 02/03/2011 version 1.0    #
+#############################
+ 
+ 
+#  Check if there are 4 arguments
+#
+if [ $# -ne 4 ]
+then
+echo "distance_2_membrane -> Usage : distance_2_membrane MOL_file P1_file P2_file output"
+echo "------------------------------------------------------"
+echo ""
+echo "MOL_file [file containing the time and z position of your molecule / atom]"
+echo "P1_file [file containing the z position of P atoms in layer 1]"
+echo "P2_file [file containing the z position of P atoms in layer 2]"
+echo "output [the prefix you want to use - .DAT extension will be added]"
+echo ""
+echo "ATTENTION: The script assumes that layer P1(z) < P2(z)"
+echo "------------------------------------------------------"
+exit
+fi
+
+MOL_file=$1
+P1_file=$2
+P2_file=$3
+output=$4
+
+################################################
+# And now ... the code!                        #
+################################################
+
+paste ${MOL_file} ${P1_file} ${P2_file} > distance_2_membrane.TMP
+
+# calculate absolute distance to P1 and P2
+
+awk ' {if ( ($3-$2)>=0) a=($3-$2); else (a=($3-$2)*-1)} {if ( ($4-$2)>=0) b=($4-$2); else (b=($4-$2)*-1)} {print $0, a, b} ' distance_2_membrane.TMP > distance_2_membrane.ABS.TMP
+
+awk 'BEGIN {print "# TIME MOL P1 P2 ABSD1 ABSD2 DIST"} {if ($5<$6) print $0,($3-$2); else print $0, ($2-$4)}' distance_2_membrane.ABS.TMP > $4.DAT 
+
+rm -rf distance_2_membrane.TMP distance_2_membrane.ABS.TMP
