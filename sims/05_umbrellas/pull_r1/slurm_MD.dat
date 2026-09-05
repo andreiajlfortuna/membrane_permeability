@@ -1,0 +1,53 @@
+## Name for this Job (should be changed):
+Name=bromodiazepam_pull_r1
+#
+## GMX Version to be used (uncomment the one to be used)
+grom=/gromacs/gromacs-2021.2/bin/gmx
+#grom=/gromacs/gromacs-2021.2-GPU/bin/gmx
+#grom=/gromacs/gromacs-5.1.5/bin/gmx
+#grom=/gromacs/gromacs-4.0.7_pH_I/bin
+
+#
+## Number of Threads (processors):
+## For GMX, you can only choose 4, 8, 16 (reserved for GPU job)
+ncpus=8
+#
+## GMX Topology location
+top=../01_min/bromodiazepam_EP_POPC.top 
+#
+## GMX Index location
+index=../01_min/index.ndx
+#
+## GMX MDP location
+mdp=steeredMD.mdp
+#
+## GMX Gro location
+gro=../04_analysis/conf_110120.gro
+#
+## # of segments (many times it corresponds to nanoseconds
+## but sometimes, it can be dozens of nanoseconds)
+Segments=3
+#
+## Sometimes we need to use a shorter Rcon to be able to run
+## a very small system in parallel (values betwwen 0.6-1.2).
+Rcon=0.0
+#
+## Choose the list of machines (partition)
+## More than one partition can be supplied, separated by commas and without spaces
+## GPUH or GPUL:   All machines with GPU (High or Low performance)
+## MD32f:  List of machines with 32 cores/threads for 8 or 16 cores submissions
+## MD32c:  List of machines with 32 cores/threads for 32 cores submission
+## MD24:  List of older machines with 24 cores/threads
+## MD16:  List of older machines with 16 cores/threads
+#Partition=GPUD,GPUH,GPUL
+Partition=MD32f,MD32c,QMLM
+
+## Requeue: the job is restarted in another node in case the assigned one reboots
+## Options are 1 or 0
+requeue=1
+#
+## Email Address to receive notification of completion:
+## Multiple email addresses can be provided separated by comma.
+## If left blank, no notification will be sent.
+Email=""
+#
