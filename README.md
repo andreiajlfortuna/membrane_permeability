@@ -15,14 +15,13 @@ Bromazepam was chosen as example but the same methodology can be applied to othe
 
 ### Ligand parametrization
 - **Geometry optimization:** B3LYP/6-311G(d,p) (Gaussian 09).
-- **Charges:** RESP charges fitted to ESP calculated at HF/6-31G(d) (6-311G(d) for iodine, with an MK radius of 2.3 Å).
-- **Force field:** GAFF for the remaining parameters.
-- **Halogen anisotropy:** σ-hole emulated with an extra point (EP) of charge, placed at a distance R<sub>min</sub> from the halogen along the C–X axis (180°) and implemented as a GROMACS type 2 virtual site. A "no EP" set of RESP charges is also computed for comparison.
-- **Multiconformational RESP** for molecules where an intramolecular HB changes the σ-hole (furosemide, metolazone).
+- **Charges:** RESP charges fitted to ESP calculated at HF/6-31G(d) (6-311G(d) for iodine, with an MK radius of 2.3 Å).  σ-hole emulated with an extra point (EP) of charge, placed at a distance R<sub>min</sub> from the halogen along the C–X axis (180°) and implemented as a GROMACS type 2 virtual site. A "no EP" set of RESP charges is also computed for comparison.
+- **Force field:** GAFF
+- **Multiconformational RESP** for molecules where an intramolecular HB with the halogen can occur and changes the σ-hole (furosemide, metolazone).
 
 ### Simulations (GROMACS 2021.2)
 - **System:** one solute in a POPC bilayer (128 lipids, 5652 TIP3P waters), Lipid14 force field, 310 K.
-- **Equilibration:** energy minimization (steepest descent), then three NVT steps with decreasing restraints.
+- **Minimization and Equilibration:** energy minimization (steepest descent), then three NVT steps with decreasing restraints.
 - **Unbiased MD:** 5 independent replicates of 250 ns (NPT; v-rescale thermostat, semi-isotropic Berendsen barostat, PME, P-LINCS, 2 fs time step).
 - **Steered MD:** solute pulled from the aqueous phase to the bilayer center to generate the starting configurations.
 - **Umbrella sampling:** 19 windows spaced 2 Å apart (0–36 Å from the bilayer center), 3 replicates of 150 ns per window (first 50 ns discarded).
@@ -38,6 +37,3 @@ Bromazepam was chosen as example but the same methodology can be applied to othe
 - **Statistics:** Jackknife error estimates; EP vs no EP compared using non-overlapping error bars or a composite error criterion.
 - **Descriptors:** consensus logP and TPSA from SwissADME, compared with experimental Caco-2 P<sub>app</sub> values.
 
-## Citation
-
-Fortuna, A.; Gomes, A. M. M.; Costa, P. J. *Impact of Halogen Anisotropy on the Membrane Permeability of Halogenated Drugs*. J. Med. Chem. 2026. https://doi.org/10.1021/acs.jmedchem.6c01696
