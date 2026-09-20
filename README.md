@@ -1,4 +1,4 @@
-# Impact of Halogen Anisotropy on the Membrane Permeability of Halogenated Drugs
+#  Membrane Permeability of Halogenated Drugs
 
 <p align="center">
   <img width="700" alt="Graphical abstract: halogen and hydrogen bonds between a halogenated drug and a POPC bilayer" src="https://github.com/user-attachments/assets/325b3f45-6fa8-4509-ad42-24f00183b2af" />
