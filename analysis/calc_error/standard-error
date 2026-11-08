@@ -1,0 +1,39 @@
+#! /usr/bin/python2.7
+
+__author__ = "Diogo Vila-Vicosa"
+__date__   = "2017 03 16"
+
+# A. Baptista in error_of_average
+# The script writes down the value of the average plus-or-minus two
+# standard deviatons, which is a common error interval. If you prefer to
+# use plus-or-minus one standard deviation just half the given value.
+
+# Import
+import fileinput
+import math
+
+# Read from stdin
+values = []
+for line in fileinput.input():
+  values.append(float(line.split()[0]))
+
+# Calculate average
+s       = sum(values)
+n       = len(values)
+avx     = s/n
+
+# Calculate std dev from a Jackknife resampling
+std_dev = 0
+for i in range(len(values)):
+  partial_avx = 0
+  for j in range(len(values)):
+    if j != i:
+      partial_avx = partial_avx + values[j]
+  std_dev = std_dev + (avx-partial_avx/(n-1))**2
+
+#std_err = 2*math.sqrt(std_dev * (n-1) / n)
+# for error values, we do not divide by 2
+std_err = math.sqrt(std_dev * (n-1) / n)
+
+# Print the average, jackknife standard error and standard deviation
+print "avx=", avx, "   JK-SE=",  std_err, "   JK-SD=", std_err*math.sqrt(n)
